@@ -15,7 +15,6 @@
 				$(window).scroll(function(){
 					/* 
 					@todo calculaute scroll offset to know if need to load next element
-					
 					*/
 					if(load === false){
 					
