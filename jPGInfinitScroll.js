@@ -9,32 +9,33 @@
 			function()
 			{
 				var $this = $(this)
-					,load = false;
+					,load = false
+					,nbChild = $this.children().length
+					,$last = $this.children().last()
+					,maxItem = $this.attr(options.maxItemProperty);
 				
-				// look scroll
-				$(window).scroll(function(){
-					/* 
-					@todo calculaute scroll offset to know if need to load next element
-					
-					*/
-					if(load === false){
-					
+				// look scroll on container
+				$this.scroll(function(){
+					if(
+						load === false // no load running
+						&& $last.offset().top - $this.height() <= $this.scrollTop() // position of last element less height of container minor than scroll top position => last element will be on the screen with the next scroll => load the next element 
+						&& (maxItem == undefined || (maxItem != undefined && maxItem > nbChild)) //if max item, don't do ajax request if all items are already show
+					){
+						
 						load = true;
-						
-						// get last id
-						var $last = $this.children().last();
-						
 						$.ajax({
 							url: options.urlAjax,
 							type: 'get',
-							data: 'lastId='+$last.attr('id'),
+							data: options.ajaxData($this, $last),
 							dataType: options.dataType,
-			 
-							//Succès de la requête
 							success: function(data) {
-							console.log(data);
+								//callback function to do something
 								options.callback($this, $last, data);
+								//load is finish
 								load = false;
+								//re-init last item and nb of child
+								$last = $this.children().last();
+								nbChild = $this.children().length;
 							}
 						});
 					}
@@ -48,9 +49,14 @@
 	 */
 	$.fn.jPGInfinitScroll.defaultOptions =
 	{
-		urlAjax: '/test/jPGInfinitScroll/ajax.php',
-		dataType: 'html'
-		callback: function(container, $last, data){
+		urlAjax: '/gitHub/jPGInfinitScroll/ajax.php'
+		,dataType: 'html'
+		,maxItemProperty: 'data-max-item' // property of container tag with max item value
+		,ajaxData: function($container, $last){ // data for the get value. Return a string
+			return 'lastId='+$last.attr('id');
+		}
+		,callback: function($container, $last, data){ //callback of ajax success
+			// put new comment after the last comment
 			$last.after(data);
 			}
 	};
